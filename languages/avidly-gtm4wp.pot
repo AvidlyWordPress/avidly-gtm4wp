@@ -1,0 +1,31 @@
+# Copyright (C) 2022 Avidly
+# This file is distributed under the GNU General Public License v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Avidly Google Tag Manager 1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/avidly-gtm4wp\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2022-05-02T13:59:49+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.6.0\n"
+"X-Domain: avidly-gtm4wp\n"
+
+#. Plugin Name of the plugin
+msgid "Avidly Google Tag Manager"
+msgstr ""
+
+#. Description of the plugin
+msgid "Set of base rules to complement GTM setup by pushing page meta data and user information into the dataLayer."
+msgstr ""
+
+#. Author of the plugin
+msgid "Avidly"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "http://avidly.fi"
+msgstr ""
