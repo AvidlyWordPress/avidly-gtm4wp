@@ -13,29 +13,36 @@ Download the plugin and activate it.
 Datalayer properties can be manipulated via custom filters (for example via theme or features plugin). Each key is creating a new dataLayer property. 
 
 1. 'avidly_gtm4wp_sitewide' = Create or modify sitewide properties.
-	Array (
-		['event']        => (string)
-		['wp_title']     => (string)
-		['wp_lang']      => (string)
-		['wp_loggedin']  => (bool)
-		['wp_userid']    => (int)
-		['wp_posttype']  => (string)
-		['wp_paged']     => (int)
-	)
+```
+Array (
+['event']        => (string)
+['wp_title']     => (string)
+['wp_lang']      => (string)
+['wp_loggedin']  => (bool)
+['wp_userid']    => (int)
+['wp_posttype']  => (string)
+['wp_paged']     => (int)
+)
+```
 2. 'avidly_gtm4wp_single' = Create or modify single post type properties.
-	Array (
-		['wp_poststatus'] => (string)
-		['wp_author']     => (string)
-		['wp_postdate']   => (string)
-		['wp_moddate']    => (string)
-		['wp_{tax_slug}'] => (array)
-	)
+```
+Array (
+['wp_poststatus'] => (string)
+['wp_author']     => (string)
+['wp_postdate']   => (string)
+['wp_moddate']    => (string)
+['wp_{tax_slug}'] => (array)
+)
+```
 3. 'avidly_gtm4wp_url_params' = Create or modify URL parameters properties.
-	Array (
-		['wp_param_{param}'] => (string)
-	)
+```
+Array (
+['wp_param_{param}'] => (string)
+)
+```
 
 Example of use:
+
 	/**
 	 * Modify single post type aataLayer properties
 	 *
@@ -68,31 +75,36 @@ Example of use:
 Excluded post types, taxonomies and parameters can be manipulated via custom filters (for example via theme or features plugin).
 
 1. 'avidly_gtm4wp_exclude_post_types' = Create or modify excluded post types.
-	Array (
-		[0] => 'revision'
-		[1] => 'nav_menu_item'
-		[2] => 'custom_css'
-		[3] => 'customize_changeset'
-		[4] => 'oembed_cache'
-		[5] => 'user_request'
-		[6] => 'wp_block'
-		[7] => 'wp_template'
-		[8] => 'wp_template_part'
-		[9] => 'wp_global_styles'
-		[10] => 'wp_navigation'
-		[11] => 'polylang_mo'
-		[12] => 'acf-field-group'
-		[13] => 'acf-field'
-	)
+```
+Array (
+[0] => 'revision'
+[1] => 'nav_menu_item'
+[2] => 'custom_css'
+[3] => 'customize_changeset'
+[4] => 'oembed_cache'
+[5] => 'user_request'
+[6] => 'wp_block'
+[7] => 'wp_template'
+[8] => 'wp_template_part'
+[9] => 'wp_global_styles'
+[10] => 'wp_navigation'
+[11] => 'polylang_mo'
+[12] => 'acf-field-group'
+[13] => 'acf-field'
+)
+```
 2. 'avidly_gtm4wp_exclude_taxonomies' = Create or modify excluded taxonomies.
-	Array (
-		[0] => 'post_format',
-		[1] => 'language',
-		[2] => 'post_translations',
-	)
+```
+Array (
+[0] => 'post_format',
+[1] => 'language',
+[2] => 'post_translations',
+)
+```
 3. 'avidly_gtm4wp_exclude_params' = Create or modify excluded URL parameters. Defaults to none.
 
 Example of use:
+
 	/**
 	 * Exclude post types properties from dataLayer.
 	 *
