@@ -26,7 +26,7 @@ add_action(
 /**
  * Hook functionality.
  */
-add_action( 'wp_head', 'avidly_gtm4wp_datalayer_push', -999 );
+add_action( 'wp_head', 'avidly_gtm4wp_datalayer_push', -9999 );
 
 /**
  * Hook GTM scripts to HTML head.
@@ -49,7 +49,6 @@ function avidly_gtm4wp_datalayer_push() {
 	$url_param = apply_filters( 'avidly_gtm4wp_url_params', array() );
 	?>
 
-		<!-- GTM Sitewide & Single -->
 		<script data-cfasync="false" data-pagespeed-no-defer="" type="text/javascript">
 			// Create dataLayer.
 			window.dataLayer = window.dataLayer || [];
@@ -92,7 +91,6 @@ function avidly_gtm4wp_datalayer_push() {
 			}
 			dataLayer.push( dataLayer_site );
 		</script>
-		<!-- End GTM Sitewide -->
 
 	<?php
 }
@@ -120,6 +118,7 @@ add_filter(
 
 		// These values should allways been set.
 		$datalayer = array(
+			'event'       => 'avidly_datalayer_push',
 			'wp_title'    => $title,
 			'wp_lang'     => get_locale(),
 			'wp_loggedin' => is_user_logged_in(),
@@ -164,17 +163,13 @@ add_filter(
 		// Display post types & date information only in single post types and pages.
 		if ( is_single() || is_page() ) {
 			$datalayer['wp_poststatus'] = get_post_status();
+			$datalayer['wp_author'] = get_the_author_meta( 'display_name', $post->post_author );
 
 			// Get post dates only for published content (password, public and private).
 			if ( 'publish' === get_post_status() || 'private' === get_post_status() ) {
 				$datalayer['wp_postdate'] = get_the_date( 'd.m.Y' );
 				$datalayer['wp_moddate']  = get_the_modified_date( 'd.m.Y' );
 			}
-		}
-
-		// Add author info only for posts.
-		if ( 'post' === $post_type ) {
-			$datalayer['wp_author'] = get_the_author_meta( 'display_name', $post->post_author );
 		}
 
 		// Get all available taxonomies for post type.
@@ -260,7 +255,6 @@ add_filter(
 
 		// These values should always been ignored from dataLayer.
 		$excude = array(
-			'attachment',
 			'revision',
 			'nav_menu_item',
 			'custom_css',
@@ -340,9 +334,7 @@ add_filter(
 	function ( $exclude ) {
 
 		// These values should always been ignored from dataLayer.
-		$excude = array(
-			'post_type',
-		);
+		$excude = array();
 
 		return $excude;
 	},
