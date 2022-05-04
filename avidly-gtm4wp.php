@@ -30,18 +30,17 @@ add_action( 'wp_head', 'avidly_gtm4wp_datalayer_push', -9999 );
 
 /**
  * Hook GTM scripts to HTML head.
- * This will handle the sitewide and single values to dataLayer.
  *
  * @return void
  */
 function avidly_gtm4wp_datalayer_push() {
-	// Create sitewide values.
+	// Create sitewide properties for datalayer.
 	$sitewide = apply_filters( 'avidly_gtm4wp_sitewide', array() );
 
 	// Define post types to be excluded.
 	$exclude_post_types = apply_filters( 'avidly_gtm4wp_exclude_post_types', array() );
 
-	// Get current post type if it's not excluded and pull values for datalayer.
+	// Get current post type if it's not excluded and create properties for datalayer.
 	$current_post_type = ( ! in_array( get_post_type(), $exclude_post_types, true ) ) ? get_post_type() : '';
 	$single            = ( is_singular( $current_post_type ) ) ? apply_filters( 'avidly_gtm4wp_single', array(), $current_post_type ) : '';
 
@@ -55,7 +54,7 @@ function avidly_gtm4wp_datalayer_push() {
 
 			var dataLayer_site = {
 				<?php
-				// Output values from $sitewide filter.
+				// Output properties from $sitewide filter.
 				if ( $sitewide ) {
 					foreach ( $sitewide as $key => $val ) {
 						echo sprintf(
@@ -66,7 +65,7 @@ function avidly_gtm4wp_datalayer_push() {
 					}
 				}
 
-				// Output single from $single filter.
+				// Output properties from $single filter.
 				if ( $single ) {
 					foreach ( $single as $key => $val ) {
 						echo sprintf(
@@ -77,7 +76,7 @@ function avidly_gtm4wp_datalayer_push() {
 					}
 				}
 
-				// Output URL params from $url_param filter.
+				// Output properties from $url_param filter.
 				if ( $url_param ) {
 					foreach ( $url_param as $key => $val ) {
 						echo sprintf(
@@ -97,9 +96,9 @@ function avidly_gtm4wp_datalayer_push() {
 
 
 /**
- * Define sitewide datalayer tracking.
+ * Define sitewide datalayer properties.
  *
- * @param array $datalayer set the tracking values.
+ * @param array $datalayer base properties.
  */
 add_filter(
 	'avidly_gtm4wp_sitewide',
@@ -116,21 +115,21 @@ add_filter(
 			$title = get_the_title();
 		}
 
-		// These values should allways been set.
+		// Default properties.
 		$datalayer = array(
 			'event'       => 'avidly_datalayer_push',
 			'wp_title'    => $title,
 			'wp_lang'     => get_locale(),
 			'wp_loggedin' => is_user_logged_in(),
-			'wp_userid'   => get_current_user_id(), // 0 if user is not logged in.
+			'wp_userid'   => get_current_user_id(),
 		);
 
-		// Display post type in archives and single post types/pages.
+		// Set property for archives and single post types.
 		if ( is_archive() || is_single() || is_page() ) {
 			$datalayer['wp_posttype'] = get_post_type();
 		}
 
-		// Add pagid info if found.
+		// Set property for paged views.
 		if ( is_paged() ) {
 			$datalayer['wp_paged'] = get_query_var( 'paged' );
 		}
@@ -144,28 +143,28 @@ add_filter(
 /**
  * Define datalayer tracking for single post type.
  *
- * @param array $datalayer set the tracking values.
- * @param array $post_type where the terms will be detected.
+ * @param array $datalayer base properties.
+ * @param array $post_type to detect related terms.
  *
  * @return $datalayer
  */
 add_filter(
 	'avidly_gtm4wp_single',
 	function ( $datalayer, $post_type = '' ) {
-		// Return empty if post type is not found.
+		// Return if post type is not set.
 		if ( ! $post_type ) {
 			return;
 		}
 
-		// Set global post so values can be retrieved outside a loop.
+		// Set global post so post meta can be retrieved outside a loop.
 		global $post;
 
-		// Display post types & date information only in single post types and pages.
+		// Set properties for single post types and pages only.
 		if ( is_single() || is_page() ) {
 			$datalayer['wp_poststatus'] = get_post_status();
 			$datalayer['wp_author'] = get_the_author_meta( 'display_name', $post->post_author );
 
-			// Get post dates only for published content (password, public and private).
+			// Set properties for published content only (password, public and private).
 			if ( 'publish' === get_post_status() || 'private' === get_post_status() ) {
 				$datalayer['wp_postdate'] = get_the_date( 'd.m.Y' );
 				$datalayer['wp_moddate']  = get_the_modified_date( 'd.m.Y' );
@@ -178,10 +177,10 @@ add_filter(
 		// Define taxonomies to be exclude.
 		$exclude_tax = apply_filters( 'avidly_gtm4wp_exclude_taxonomies', array() );
 
-		// Loop thru available taxonomies and create key & value if terms are found.
+		// Loop available taxonomies and create property if terms are found.
 		if ( $taxonomies && ! is_wp_error( $taxonomies ) ) {
 			foreach ( $taxonomies as $tax ) {
-				// Skip excluded taxonomies no need to hadle those.
+				// Skip excluded taxonomies no need to handle those.
 				if ( in_array( $tax, $exclude_tax, true ) ) {
 					continue;
 				}
@@ -195,6 +194,7 @@ add_filter(
 				// Option: convert terms to string.
 				// $terms = ( $terms_obj && ! is_wp_error( $terms_obj ) ) ? join( ', ', wp_list_pluck( $terms_obj, 'name' ) ) : null; // convert to string.
 
+				// Create property if terms are found.
 				if ( $terms ) {
 					$datalayer[ 'wp_' . $tax ] = $terms;
 				}
@@ -210,30 +210,27 @@ add_filter(
 /**
  * Define datalayer tracking for URL parameters.
  *
- * @param array $datalayer set the tracking values.
+ * @param array $datalayer base properties.
  */
 add_filter(
 	'avidly_gtm4wp_url_params',
 	function ( $datalayer ) {
-
-		// Set global post so values can be retrieved outside a loop.
-		global $wp;
-
 		// Get current URL parameters.
-		$params = $_GET;
+		$params = $_GET; // phpcs:ignore
 
 		$exclude_params = apply_filters( 'avidly_gtm4wp_exclude_params', array() );
 
+		// Loop available params and create property if value is found.
 		if ( $params && ! is_wp_error( $params ) ) {
 			foreach ( $params as $key => $val ) {
-				// Skip excluded taxonomies no need to hadle those.
+				// Skip excluded parameters no need to handle those.
 				if ( in_array( $key, $exclude_params, true ) ) {
 					continue;
 				}
 
-				// Add to dataLayer if value is found.
+				// Create property if value is found.
 				if ( $val ) {
-					$datalayer[ 'wp_param_' . $key ] = $val;
+					$datalayer[ 'wp_param_' . esc_attr( $key ) ] = esc_html( $val );
 				}
 			}
 		}
@@ -245,15 +242,38 @@ add_filter(
 );
 
 /**
+ * Detect what format value should be outputed for datalayer.
+ *
+ * @param mixed $value to detect.
+ *
+ * @return $value in custom format.
+ */
+function avidly_gtm4wp_esc_value( $value ) {
+	// Modify to string format.
+	if ( is_string( $value ) ) {
+		return "'" . esc_html( $value ) . "'";
+	}
+	// Modify to boolean format.
+	if ( is_bool( $value ) ) {
+		return ( $value ) ? 'true' : 'false';
+	}
+
+	// Modify to array format.
+	if ( is_array( $value ) ) {
+		return "['" . join( "', '", $value ) . "']";
+	}
+
+	return $value;
+}
+
+/**
  * Exclude post types.
  *
- * @param array $exclude set the excluded post types.
+ * @param array $exclude the excluded post types.
  */
 add_filter(
 	'avidly_gtm4wp_exclude_post_types',
 	function ( $exclude ) {
-
-		// These values should always been ignored from dataLayer.
 		$excude = array(
 			'revision',
 			'nav_menu_item',
@@ -278,40 +298,13 @@ add_filter(
 );
 
 /**
- * Detect the format that value should be outputed in dataLayer push.
- *
- * @param mixed $value to detect.
- *
- * @return $value in custom format
- */
-function avidly_gtm4wp_esc_value( $value ) {
-	// Modify to string format.
-	if ( is_string( $value ) ) {
-		return "'" . esc_html( $value ) . "'";
-	}
-	// Modify to boolean format.
-	if ( is_bool( $value ) ) {
-		return ( $value ) ? 'true' : 'false';
-	}
-
-	// Modify to array format.
-	if ( is_array( $value ) ) {
-		return "['" . join( "', '", $value ) . "']";
-	}
-
-	return $value;
-}
-
-/**
  * Exclude taxonomies.
  *
- * @param array $exclude set the excluded taxonomies.
+ * @param array $exclude the excluded taxonomies.
  */
 add_filter(
 	'avidly_gtm4wp_exclude_taxonomies',
 	function ( $exclude ) {
-
-		// These values should always been ignored from dataLayer.
 		$excude = array(
 			'post_format',
 			'language',
@@ -327,13 +320,11 @@ add_filter(
 /**
  * Exclude URL parameters.
  *
- * @param array $exclude set the excluded URL parameters.
+ * @param array $exclude the excluded URL parameters.
  */
 add_filter(
 	'avidly_gtm4wp_exclude_params',
 	function ( $exclude ) {
-
-		// These values should always been ignored from dataLayer.
 		$excude = array();
 
 		return $excude;
