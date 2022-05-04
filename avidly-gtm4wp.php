@@ -60,9 +60,9 @@ function avidly_gtm4wp_datalayer_push() {
 				if ( $sitewide ) {
 					foreach ( $sitewide as $key => $val ) {
 						echo sprintf(
-							"'%s': '%s', \n",
+							"'%s': %s, \n",
 							esc_html( $key ),
-							esc_html( $val )
+							avidly_gtm4wp_esc_value( $val ) // phpcs:ignore
 						);
 					}
 				}
@@ -71,9 +71,9 @@ function avidly_gtm4wp_datalayer_push() {
 				if ( $single ) {
 					foreach ( $single as $key => $val ) {
 						echo sprintf(
-							"'%s': '%s', \n",
+							"'%s': %s, \n",
 							esc_html( $key ),
-							esc_html( $val )
+							avidly_gtm4wp_esc_value( $val ) // phpcs:ignore
 						);
 					}
 				}
@@ -82,9 +82,9 @@ function avidly_gtm4wp_datalayer_push() {
 				if ( $url_param ) {
 					foreach ( $url_param as $key => $val ) {
 						echo sprintf(
-							"'%s': '%s', \n",
+							"'%s': %s, \n",
 							esc_html( $key ),
-							esc_html( $val )
+							avidly_gtm4wp_esc_value( $val ) // phpcs:ignore
 						);
 					}
 				}
@@ -109,7 +109,9 @@ add_filter(
 
 		// Detect title from content type.
 		if ( is_archive() ) {
-			$title = 'Archives';
+			$post_type      = get_post_type_object( get_post_type() );
+			$post_type_name = ( is_object( $post_type ) ) ? $post_type->labels->name : 'undefined';
+			$title          = 'Archives: ' . $post_type_name;
 		} elseif ( is_search() ) {
 			$title = 'Search results';
 		} else {
@@ -118,15 +120,20 @@ add_filter(
 
 		// These values should allways been set.
 		$datalayer = array(
-			'wp_title'      => $title,
-			'wp_lang'       => get_locale(),
-			'wp_loggedin'   => ( is_user_logged_in() ) ? 'true' : 'false',
-			'wp_userid'     => get_current_user_id(), // 0 if user is not logged in.
+			'wp_title'    => $title,
+			'wp_lang'     => get_locale(),
+			'wp_loggedin' => is_user_logged_in(),
+			'wp_userid'   => get_current_user_id(), // 0 if user is not logged in.
 		);
 
 		// Display post type in archives and single post types/pages.
 		if ( is_archive() || is_single() || is_page() ) {
 			$datalayer['wp_posttype'] = get_post_type();
+		}
+
+		// Add pagid info if found.
+		if ( is_paged() ) {
+			$datalayer['wp_paged'] = get_query_var( 'paged' );
 		}
 
 		return $datalayer;
@@ -188,7 +195,10 @@ add_filter(
 				$terms_obj = get_the_terms( $post->ID, $tax );
 
 				// Create comma separated list of terms.
-				$terms = ( $terms_obj && ! is_wp_error( $terms_obj ) ) ? join( ', ', wp_list_pluck( $terms_obj, 'name' ) ) : 'false';
+				$terms = ( $terms_obj && ! is_wp_error( $terms_obj ) ) ? wp_list_pluck( $terms_obj, 'name' ) : null;
+
+				// Option: convert terms to string.
+				// $terms = ( $terms_obj && ! is_wp_error( $terms_obj ) ) ? join( ', ', wp_list_pluck( $terms_obj, 'name' ) ) : null; // convert to string.
 
 				if ( $terms ) {
 					$datalayer[ 'wp_' . $tax ] = $terms;
@@ -272,6 +282,31 @@ add_filter(
 	10,
 	1
 );
+
+/**
+ * Detect the format that value should be outputed in dataLayer push.
+ *
+ * @param mixed $value to detect.
+ *
+ * @return $value in custom format
+ */
+function avidly_gtm4wp_esc_value( $value ) {
+	// Modify to string format.
+	if ( is_string( $value ) ) {
+		return "'" . esc_html( $value ) . "'";
+	}
+	// Modify to boolean format.
+	if ( is_bool( $value ) ) {
+		return ( $value ) ? 'true' : 'false';
+	}
+
+	// Modify to array format.
+	if ( is_array( $value ) ) {
+		return "['" . join( "', '", $value ) . "']";
+	}
+
+	return $value;
+}
 
 /**
  * Exclude taxonomies.
