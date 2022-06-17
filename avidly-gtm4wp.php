@@ -145,7 +145,7 @@ add_filter(
 
 		// Default properties.
 		$datalayer = array(
-			'event'       => 'avidly_datalayer_push',
+			'event'       => 'agtm4wp_pageview',
 			'wp_title'    => $title,
 			'wp_lang'     => get_locale(),
 			'wp_loggedin' => is_user_logged_in(),

@@ -19,6 +19,7 @@ function gtm4wpEventClick() {
 
 				// Add click realted stuff to dataLayer.
 				dataLayer.push({
+					'event': 'agtm4wp_click',
 					'wp_click_type': this.getAttribute('data-click-type'),
 					'wp_click_event': this.getAttribute('data-click-event'),
 					'wp_click_dom': parent
