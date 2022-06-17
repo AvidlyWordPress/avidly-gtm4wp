@@ -1,0 +1,26 @@
+{
+  "name": "avidly-gtm4wp",
+  "version": "1.1.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {},
+  "scripts": {
+    "dev": "npm run development",
+    "development": "mix",
+    "watch": "mix watch",
+    "watch-poll": "mix watch -- --watch-options-poll=1000",
+    "hot": "mix watch --hot",
+    "prod": "npm run production",
+    "production": "mix --production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:AvidlyWordPress/avidly-gtm4wp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "laravel-mix": "^6.0.48"
+  }
+}

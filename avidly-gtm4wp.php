@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Avidly Google Tag Manager
  * Description: Set of base rules to complement GTM setup by pushing page meta data and user information into the dataLayer.
- * Version: 1.0
+ * Version: 1.1.0
  * Author: Avidly
  * Author URI: http://avidly.fi
  * License: GNU General Public License v2 or later
@@ -14,19 +14,35 @@
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
 
 /**
- * Plugin translations.
- */
-add_action(
-	'init',
-	function() {
-		load_plugin_textdomain( 'avidly-gtm4wp', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-	}
-);
-
-/**
  * Hook functionality.
  */
+add_action( 'init', 'avidly_gtm4wp_textdomain' );
+add_action( 'wp_enqueue_scripts', 'avidly_gtm4wp_enqueue_script', 10 );
 add_action( 'wp_head', 'avidly_gtm4wp_datalayer_push', -9999 );
+add_action( 'nav_menu_link_attributes', 'avidly_gtm4wp_menu_link_attributes', 10, 4 );
+
+/**
+ * Plugin translations.
+ */
+function avidly_gtm4wp_textdomain() {
+	load_plugin_textdomain( 'avidly-gtm4wp', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+
+/**
+ * Enqueue scripts.
+ *
+ * @return void
+ */
+function avidly_gtm4wp_enqueue_script() {
+	wp_enqueue_script(
+		'avidly-gtm4wp',
+		plugin_dir_url( __FILE__ ) . 'assets/dist/js/index.js',
+		array(),
+		'1.1.0',
+		true
+	);
+}
+
 
 /**
  * Hook GTM scripts to HTML head.
@@ -92,6 +108,18 @@ function avidly_gtm4wp_datalayer_push() {
 		</script>
 
 	<?php
+}
+
+/**
+ * Add custom attribute to all menu items for click detection.
+ *
+ * @link https://developer.wordpress.org/reference/hooks/nav_menu_link_attributes/
+ */
+function avidly_gtm4wp_menu_link_attributes( $atts, $item, $args, $depth ) {
+	$atts['data-click-type']  = 'menu';
+	$atts['data-click-event'] = $args->theme_location;
+
+	return $atts;
 }
 
 
@@ -162,7 +190,7 @@ add_filter(
 		// Set properties for single post types and pages only.
 		if ( is_single() || is_page() ) {
 			$datalayer['wp_poststatus'] = get_post_status();
-			$datalayer['wp_author'] = get_the_author_meta( 'display_name', $post->post_author );
+			$datalayer['wp_author']     = get_the_author_meta( 'display_name', $post->post_author );
 
 			// Set properties for published content only (password, public and private).
 			if ( 'publish' === get_post_status() || 'private' === get_post_status() ) {
