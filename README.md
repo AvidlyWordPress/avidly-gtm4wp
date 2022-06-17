@@ -10,6 +10,7 @@ Push set of base rules into dataLayer on every page view.
 ### Click events
 Detect with JavaScript if element with `[data-click-event]` has been clicked and push dataLayer values:
 ```
+'event': 'agtm4wp_click',
 'wp_click_type': this.getAttribute('data-click-type'),
 'wp_click_event': this.getAttribute('data-click-event'),
 'wp_click_dom': parent DOM element name if detected, supports: HEADER, FOOTER, ASIDE, SECTION
