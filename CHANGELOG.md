@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.1
+Change pageview and click events names for dataLayer
+
 ## 1.1.0
 Add support to detect wp_nav_menu items click via dataLayer.
 

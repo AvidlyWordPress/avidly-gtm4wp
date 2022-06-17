@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Avidly Google Tag Manager
  * Description: Set of base rules to complement GTM setup by pushing page meta data and user information into the dataLayer.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Avidly
  * Author URI: http://avidly.fi
  * License: GNU General Public License v2 or later
@@ -38,7 +38,7 @@ function avidly_gtm4wp_enqueue_script() {
 		'avidly-gtm4wp',
 		plugin_dir_url( __FILE__ ) . 'assets/dist/js/index.js',
 		array(),
-		'1.1.0',
+		'1.1.1',
 		true
 	);
 }
