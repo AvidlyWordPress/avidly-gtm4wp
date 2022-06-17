@@ -38,7 +38,7 @@ function avidly_gtm4wp_enqueue_script() {
 		'avidly-gtm4wp',
 		plugin_dir_url( __FILE__ ) . 'assets/dist/js/index.js',
 		array(),
-		'1.1.01',
+		'1.1.0',
 		true
 	);
 }

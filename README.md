@@ -2,7 +2,18 @@
 Set of base rules to complement GTM setup by pushing page meta data and user information into the dataLayer.
 
 ## How it works
-Hooks into wp_head and pushed meta data into the dataLayer.
+Hooks into wp_head and pushed meta data into the dataLayer on pageView & click event.
+
+### pageView events
+Push set of base rules into dataLayer on every page view.
+
+### Click events
+Detect with JavaScript if element with `[data-click-event]` has been clicked and push dataLayer values:
+````
+'wp_click_type': this.getAttribute('data-click-type'),
+'wp_click_event': this.getAttribute('data-click-event'),
+'wp_click_dom': parent DOM element name if detected, supports: HEADER, FOOTER, ASIDE, SECTION
+```
 
 ## Usage
 Download the plugin and activate it.
