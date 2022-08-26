@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Avidly Google Tag Manager
  * Description: Set of base rules to complement GTM setup by pushing page meta data and user information into the dataLayer.
- * Version: 1.1.2
+ * Version: 1.2.0
  * Author: Avidly
  * Author URI: http://avidly.fi
  * License: GNU General Public License v2 or later
@@ -112,6 +112,11 @@ function avidly_gtm4wp_datalayer_push() {
 
 /**
  * Add custom attribute to all menu items for click detection.
+ *
+ * @param array    $atts The HTML attributes applied to the menu item's <a> element, empty strings are ignored.
+ * @param WP_Post  $item The current menu item object.
+ * @param stdClass $args An object of wp_nav_menu() arguments.
+ * @param int      $depth Depth of menu item. Used for padding.
  *
  * @link https://developer.wordpress.org/reference/hooks/nav_menu_link_attributes/
  */
@@ -363,4 +368,53 @@ add_filter(
 	},
 	10,
 	1
+);
+
+/**
+ * Modify render output: Button.
+ * Add custom attributes for button block in output.
+ *
+ * @param string $block_content HTML output.
+ * @param array  $block attributes.
+ *
+ * @return $block_content
+ */
+add_filter(
+	'render_block',
+	function( $block_content, $block ) {
+		// Return if we are not rendering button block.
+		if ( 'core/button' !== $block['blockName'] ) {
+			return $block_content;
+		}
+
+		// Add custom attributes: data-click-type & data-click-event.
+		$block_content = preg_replace( '/(<a\b[^><]*)>/i', '$1 data-click-type="button" data-click-event="wp-block-button">', $block_content );
+
+		// Return the content.
+		return $block_content;
+	},
+	10,
+	2
+);
+
+
+/**
+ * Modify render output: Yoast SEO Breadcrum.
+ * Add custom attributes for breadcrum links output.
+ * Affect breadcrums added via PHP and block.
+ *
+ * @param string $output HTML output.
+ *
+ * @return $output
+ */
+add_filter(
+	'wpseo_breadcrumb_output',
+	function ( $output ) {
+		// Add custom attributes: data-click-type & data-click-event.
+		$output = preg_replace( '/(<a\b[^><]*)>/i', '$1 data-click-type="breadcrumb" data-click-event="wpseo-breadcrumb">', $output );
+
+		return $output;
+	},
+	10,
+	2
 );
