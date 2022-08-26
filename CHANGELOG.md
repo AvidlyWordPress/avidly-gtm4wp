@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+Change user ID to INT value for dataLayer (return NULL id user is not logged in).
+
 ## 1.1.1
 Change pageview and click events names for dataLayer
 

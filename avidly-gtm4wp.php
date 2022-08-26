@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Avidly Google Tag Manager
  * Description: Set of base rules to complement GTM setup by pushing page meta data and user information into the dataLayer.
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: Avidly
  * Author URI: http://avidly.fi
  * License: GNU General Public License v2 or later
@@ -149,8 +149,12 @@ add_filter(
 			'wp_title'    => $title,
 			'wp_lang'     => get_locale(),
 			'wp_loggedin' => is_user_logged_in(),
-			'wp_userid'   => get_current_user_id(),
 		);
+
+		// Detect loggend in users.
+		if ( 0 !== get_current_user_id() ) {
+			$datalayer['wp_userid'] = get_current_user_id();
+		}
 
 		// Set property for archives and single post types.
 		if ( is_archive() || is_single() || is_page() ) {
