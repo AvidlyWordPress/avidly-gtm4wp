@@ -14,12 +14,16 @@ function gtm4wpEventClick() {
 			i.addEventListener( 'click', function(e) {
 
 				// Find specific DOM element from element parents.
-				let findDOM = [ 'HEADER', 'FOOTER', 'ASIDE', 'SECTION' ];
-				let parent = matchValue( getAncestors(this), findDOM );
+				const findDOM = [ 'HEADER', 'FOOTER', 'ASIDE', 'SECTION' ];
+				const parent = matchValue( getAncestors(this), findDOM );
+				// Clean up HTML code from link
+				const linkText = this.innerHTML.replace(/<[^>]*>?/gm, '');
 
 				// Add click realted stuff to dataLayer.
 				dataLayer.push({
 					'event': 'agtm4wp_click',
+					'wp_click_url': this.getAttribute('href'),
+					'wp_click_text': this.innerHTML,
 					'wp_click_type': this.getAttribute('data-click-type'),
 					'wp_click_event': this.getAttribute('data-click-event'),
 					'wp_click_dom': parent
