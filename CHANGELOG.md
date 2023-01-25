@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.0
+Extend click tracking with wp_click_url and wp_click_text properties.
+
 ## 1.2.0
 Click tracking extending and improvements to user ID detection.
 
