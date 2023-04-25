@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Avidly Google Tag Manager
  * Description: Set of base rules to complement GTM setup by pushing page meta data and user information into the dataLayer.
- * Version: 1.3.0
+ * Version: 1.4.0
  * Author: Avidly
  * Author URI: http://avidly.fi
  * License: GNU General Public License v2 or later
@@ -13,13 +13,17 @@
 
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
 
+// Require files.
+require_once __DIR__ . '/inc/render-block.php';
+require_once __DIR__ . '/inc/yoast.php';
+require_once __DIR__ . '/inc/menu.php';
+
 /**
  * Hook functionality.
  */
 add_action( 'init', 'avidly_gtm4wp_textdomain' );
 add_action( 'wp_enqueue_scripts', 'avidly_gtm4wp_enqueue_script', 10 );
 add_action( 'wp_head', 'avidly_gtm4wp_datalayer_push', -9999 );
-add_action( 'nav_menu_link_attributes', 'avidly_gtm4wp_menu_link_attributes', 10, 4 );
 
 /**
  * Plugin translations.
@@ -38,11 +42,10 @@ function avidly_gtm4wp_enqueue_script() {
 		'avidly-gtm4wp',
 		plugin_dir_url( __FILE__ ) . 'assets/dist/js/index.js',
 		array(),
-		'1.3.0',
+		'1.4.0',
 		true
 	);
 }
-
 
 /**
  * Hook GTM scripts to HTML head.
@@ -109,24 +112,6 @@ function avidly_gtm4wp_datalayer_push() {
 
 	<?php
 }
-
-/**
- * Add custom attribute to all menu items for click detection.
- *
- * @param array    $atts The HTML attributes applied to the menu item's <a> element, empty strings are ignored.
- * @param WP_Post  $item The current menu item object.
- * @param stdClass $args An object of wp_nav_menu() arguments.
- * @param int      $depth Depth of menu item. Used for padding.
- *
- * @link https://developer.wordpress.org/reference/hooks/nav_menu_link_attributes/
- */
-function avidly_gtm4wp_menu_link_attributes( $atts, $item, $args, $depth ) {
-	$atts['data-click-type']  = 'menu';
-	$atts['data-click-event'] = $args->theme_location;
-
-	return $atts;
-}
-
 
 /**
  * Define sitewide datalayer properties.
@@ -370,51 +355,3 @@ add_filter(
 	1
 );
 
-/**
- * Modify render output: Button.
- * Add custom attributes for button block in output.
- *
- * @param string $block_content HTML output.
- * @param array  $block attributes.
- *
- * @return $block_content
- */
-add_filter(
-	'render_block',
-	function( $block_content, $block ) {
-		// Return if we are not rendering button block.
-		if ( 'core/button' !== $block['blockName'] ) {
-			return $block_content;
-		}
-
-		// Add custom attributes: data-click-type & data-click-event.
-		$block_content = preg_replace( '/(<a\b[^><]*)>/i', '$1 data-click-type="button" data-click-event="wp-block-button">', $block_content );
-
-		// Return the content.
-		return $block_content;
-	},
-	10,
-	2
-);
-
-
-/**
- * Modify render output: Yoast SEO Breadcrum.
- * Add custom attributes for breadcrum links output.
- * Affect breadcrums added via PHP and block.
- *
- * @param string $output HTML output.
- *
- * @return $output
- */
-add_filter(
-	'wpseo_breadcrumb_output',
-	function ( $output ) {
-		// Add custom attributes: data-click-type & data-click-event.
-		$output = preg_replace( '/(<a\b[^><]*)>/i', '$1 data-click-type="breadcrumb" data-click-event="wpseo-breadcrumb">', $output );
-
-		return $output;
-	},
-	10,
-	2
-);

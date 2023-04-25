@@ -26,7 +26,8 @@ function gtm4wpEventClick() {
 					'wp_click_text': cleanInnerHTML,
 					'wp_click_type': this.getAttribute('data-click-type'),
 					'wp_click_event': this.getAttribute('data-click-event'),
-					'wp_click_dom': parent
+					'wp_click_current': window.location.href,
+					'wp_click_dom': parent,
 				});
 			});
 		}

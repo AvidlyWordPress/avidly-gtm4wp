@@ -12,9 +12,10 @@ Detect with JavaScript if element with `[data-click-event]` has been clicked and
 ```
 'event': 'agtm4wp_click',
 'wp_click_url': this.getAttribute('href'),
-'wp_click_text': link element innerHTML without HTML markup.
+'wp_click_text': element innerHTML without HTML markup.
 'wp_click_type': this.getAttribute('data-click-type'),
 'wp_click_event': this.getAttribute('data-click-event'),
+'wp_click_current': window.location.href,
 'wp_click_dom': parent DOM element name if detected, supports: HEADER, FOOTER, ASIDE, SECTION
 ```
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.0
+Click tracking extending and improvements to file structure.
+
+### Added
+- New property for click tracking: wp_click_current (url where click was performed).
+- Click tracking attributes for file block.
+- Click tracking attributes for read more block.
+
+### Changed
+- Improved file structure.
+- Security updates for NPM dependencies.
+
 ## 1.3.0
 Extend click tracking with wp_click_url and wp_click_text properties.
 
