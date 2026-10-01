@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.1
+Stop taxonomy terms and other dataLayer values from breaking out of the page-view script.
+
+### Changed
+- Page-view data is written with `wp_json_encode()`. Property names, event names and which parameters are copied stay the same.
+- Values are no longer HTML-escaped, so `Tom &amp; Jerry` is stored as `Tom & Jerry`.
+- URL parameter values are unslashed, so `O\'Brien` is stored as `O'Brien`. Empty values and the value `0` are still skipped. Array parameters are skipped.
+- Exclusion filters keep values added by an earlier callback. The default exclusion lists are unchanged.
+- Block and breadcrumb links are not given a second copy of an existing click attribute.
+- The click listener declares its loop variable. Click properties are unchanged.
+
+### Notes
+Nothing is stored in the database, so the files can be replaced in place. Review the GTM container when upgrading from 1.0, because releases 1.1 through 1.4 already changed the payload: the page-view event is `agtm4wp_pageview`, `wp_userid` is sent only for logged-in users, taxonomy terms are an array, and `wp_loggedin` is a boolean.
+
 ## 1.4.0
 Click tracking extending and improvements to file structure.
 

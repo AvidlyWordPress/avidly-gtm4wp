@@ -2,10 +2,10 @@
 /**
  * Menu render callbacks.
  *
- * @package Avidly_GA4
+ * @package Avidly_GTM4WP
  */
 
-add_action( 'nav_menu_link_attributes', 'avidly_gtm4wp_menu_link_attributes', 10, 4 );
+add_filter( 'nav_menu_link_attributes', 'avidly_gtm4wp_menu_link_attributes', 10, 4 );
 
 /**
  * Add custom attribute to all menu items for click detection.

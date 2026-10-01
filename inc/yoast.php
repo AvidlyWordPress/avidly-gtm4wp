@@ -2,26 +2,21 @@
 /**
  * Yoast render callbacks.
  *
- * @package Avidly_GA4
+ * @package Avidly_GTM4WP
  */
 
- /**
- * Modify render output: Yoast SEO Breadcrum.
- * Add custom attributes for breadcrum links output.
- * Affect breadcrums added via PHP and block.
+/**
+ * Modify render output: Yoast SEO breadcrumb.
+ * Add custom attributes for breadcrumb links output.
+ * Affects breadcrumbs added via PHP and block.
  *
  * @param string $output HTML output.
  *
- * @return $output
+ * @return string
  */
 add_filter(
 	'wpseo_breadcrumb_output',
 	function ( $output ) {
-		// Add custom attributes: data-click-type & data-click-event.
-		$output = preg_replace( '/(<a\b[^><]*)>/i', '$1 data-click-type="breadcrumb" data-click-event="wpseo-breadcrumb">', $output );
-
-		return $output;
-	},
-	10,
-	2
+		return avidly_gtm4wp_add_link_click_attributes( $output, 'breadcrumb', 'wpseo-breadcrumb' );
+	}
 );

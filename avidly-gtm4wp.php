@@ -2,16 +2,18 @@
 /**
  * Plugin Name: Avidly Google Tag Manager
  * Description: Set of base rules to complement GTM setup by pushing page meta data and user information into the dataLayer.
- * Version: 1.4.0
+ * Version: 1.4.1
  * Author: Avidly
  * Author URI: http://avidly.fi
  * License: GNU General Public License v2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  *
- * @package Avidly_GA4
+ * @package Avidly_GTM4WP
  */
 
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
+
+define( 'AVIDLY_GTM4WP_VERSION', '1.4.1' );
 
 // Require files.
 require_once __DIR__ . '/inc/render-block.php';
@@ -27,6 +29,9 @@ add_action( 'wp_head', 'avidly_gtm4wp_datalayer_push', -9999 );
 
 /**
  * Plugin translations.
+ *
+ * The text domain is loaded so the plugin header can be translated.
+ * Analytics values stay in English on purpose.
  */
 function avidly_gtm4wp_textdomain() {
 	load_plugin_textdomain( 'avidly-gtm4wp', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
@@ -42,7 +47,7 @@ function avidly_gtm4wp_enqueue_script() {
 		'avidly-gtm4wp',
 		plugin_dir_url( __FILE__ ) . 'assets/dist/js/index.js',
 		array(),
-		'1.4.0',
+		AVIDLY_GTM4WP_VERSION,
 		true
 	);
 }
@@ -53,64 +58,167 @@ function avidly_gtm4wp_enqueue_script() {
  * @return void
  */
 function avidly_gtm4wp_datalayer_push() {
-	// Create sitewide properties for datalayer.
-	$sitewide = apply_filters( 'avidly_gtm4wp_sitewide', array() );
+	$sitewide  = avidly_gtm4wp_filter_array( 'avidly_gtm4wp_sitewide', array() );
+	$url_param = avidly_gtm4wp_filter_array( 'avidly_gtm4wp_url_params', array() );
 
-	// Define post types to be excluded.
-	$exclude_post_types = apply_filters( 'avidly_gtm4wp_exclude_post_types', array() );
+	$exclude_post_types = avidly_gtm4wp_filter_array( 'avidly_gtm4wp_exclude_post_types', array() );
+	$current_post_type  = get_post_type();
+	$current_post_type  = ( is_string( $current_post_type ) && ! in_array( $current_post_type, $exclude_post_types, true ) ) ? $current_post_type : '';
 
-	// Get current post type if it's not excluded and create properties for datalayer.
-	$current_post_type = ( ! in_array( get_post_type(), $exclude_post_types, true ) ) ? get_post_type() : '';
-	$single            = ( is_singular( $current_post_type ) ) ? apply_filters( 'avidly_gtm4wp_single', array(), $current_post_type ) : '';
+	$single = array();
+	if ( '' !== $current_post_type && is_singular( $current_post_type ) ) {
+		$single = avidly_gtm4wp_filter_array( 'avidly_gtm4wp_single', array(), $current_post_type );
+	}
 
-	// Get URL parameters.
-	$url_param = apply_filters( 'avidly_gtm4wp_url_params', array() );
+	$data = avidly_gtm4wp_sanitize_datalayer(
+		array_merge( $sitewide, $single, $url_param )
+	);
+
+	$json = avidly_gtm4wp_encode( $data );
+
+	if ( ! is_string( $json ) ) {
+		// Keep the page-view event so GTM triggers still fire, even without the properties.
+		$json = avidly_gtm4wp_encode( array( 'event' => 'agtm4wp_pageview' ) );
+	}
+
+	if ( ! is_string( $json ) ) {
+		return;
+	}
 	?>
-
-		<script data-cfasync="false" data-pagespeed-no-defer="" type="text/javascript">
-			// Create dataLayer.
-			window.dataLayer = window.dataLayer || [];
-
-			var dataLayer_site = {
-				<?php
-				// Output properties from $sitewide filter.
-				if ( $sitewide ) {
-					foreach ( $sitewide as $key => $val ) {
-						echo sprintf(
-							"'%s': %s, \n",
-							esc_html( $key ),
-							avidly_gtm4wp_esc_value( $val ) // phpcs:ignore
-						);
-					}
-				}
-
-				// Output properties from $single filter.
-				if ( $single ) {
-					foreach ( $single as $key => $val ) {
-						echo sprintf(
-							"'%s': %s, \n",
-							esc_html( $key ),
-							avidly_gtm4wp_esc_value( $val ) // phpcs:ignore
-						);
-					}
-				}
-
-				// Output properties from $url_param filter.
-				if ( $url_param ) {
-					foreach ( $url_param as $key => $val ) {
-						echo sprintf(
-							"'%s': %s, \n",
-							esc_html( $key ),
-							avidly_gtm4wp_esc_value( $val ) // phpcs:ignore
-						);
-					}
-				}
-				?>
-			}
-			dataLayer.push( dataLayer_site );
-		</script>
-
+	<script data-cfasync="false" data-pagespeed-no-defer="" type="text/javascript">
+		window.dataLayer = window.dataLayer || [];
+		window.dataLayer.push(<?php echo $json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Encoded with wp_json_encode() and JSON_HEX_* flags. ?>);
+	</script>
 	<?php
+}
+
+/**
+ * Encode the dataLayer payload so it is safe inside a script element.
+ *
+ * @param array $data Payload.
+ * @return string|false
+ */
+function avidly_gtm4wp_encode( $data ) {
+	if ( array() === $data ) {
+		return '{}';
+	}
+
+	// JSON_UNESCAPED_UNICODE keeps letters such as "ä" readable. PHP still escapes
+	// U+2028 and U+2029 unless JSON_UNESCAPED_LINE_TERMINATORS is added, so they
+	// cannot act as line breaks inside the script element.
+	return wp_json_encode(
+		$data,
+		JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
+	);
+}
+
+/**
+ * Run a dataLayer filter and keep only array results.
+ *
+ * Extra arguments are passed on to apply_filters().
+ *
+ * @param string $hook Filter name.
+ * @param array  $fallback Value to use when a callback returns a non-array.
+ * @return array
+ */
+function avidly_gtm4wp_filter_array( $hook, $fallback ) {
+	$result = call_user_func_array( 'apply_filters', func_get_args() );
+
+	return is_array( $result ) ? $result : $fallback;
+}
+
+/**
+ * Keep dataLayer values that wp_json_encode() can represent.
+ *
+ * Strings, numbers, booleans and arrays are kept. Other types are dropped
+ * so one unexpected value cannot break the whole script.
+ *
+ * @param mixed $data Filter payload.
+ * @return array
+ */
+function avidly_gtm4wp_sanitize_datalayer( $data ) {
+	if ( ! is_array( $data ) ) {
+		return array();
+	}
+
+	$clean = array();
+
+	foreach ( $data as $key => $value ) {
+		if ( ! is_string( $key ) && ! is_int( $key ) ) {
+			continue;
+		}
+
+		$sanitized = avidly_gtm4wp_sanitize_datalayer_value( $value );
+		if ( null === $sanitized ) {
+			continue;
+		}
+
+		$clean[ (string) $key ] = $sanitized;
+	}
+
+	return $clean;
+}
+
+/**
+ * Normalize one dataLayer value.
+ *
+ * @param mixed $value Raw value.
+ * @return mixed|null
+ */
+function avidly_gtm4wp_sanitize_datalayer_value( $value ) {
+	if ( is_string( $value ) || is_int( $value ) || is_bool( $value ) ) {
+		return $value;
+	}
+
+	if ( is_float( $value ) ) {
+		return is_finite( $value ) ? $value : null;
+	}
+
+	if ( ! is_array( $value ) ) {
+		return null;
+	}
+
+	$clean   = array();
+	$is_list = avidly_gtm4wp_array_is_list( $value );
+
+	foreach ( $value as $key => $item ) {
+		$sanitized = avidly_gtm4wp_sanitize_datalayer_value( $item );
+		if ( null === $sanitized ) {
+			continue;
+		}
+
+		if ( $is_list ) {
+			$clean[] = $sanitized;
+		} else {
+			$clean[ (string) $key ] = $sanitized;
+		}
+	}
+
+	return $clean;
+}
+
+/**
+ * Whether an array is a list with consecutive keys starting at 0.
+ *
+ * @param array $value Array to inspect.
+ * @return bool
+ */
+function avidly_gtm4wp_array_is_list( $value ) {
+	if ( function_exists( 'array_is_list' ) ) {
+		return array_is_list( $value );
+	}
+
+	$expected = 0;
+
+	foreach ( array_keys( $value ) as $key ) {
+		if ( $key !== $expected ) {
+			return false;
+		}
+
+		++$expected;
+	}
+
+	return true;
 }
 
 /**
@@ -121,8 +229,6 @@ function avidly_gtm4wp_datalayer_push() {
 add_filter(
 	'avidly_gtm4wp_sitewide',
 	function ( $datalayer ) {
-
-		// Detect title from content type.
 		if ( is_archive() ) {
 			$post_type      = get_post_type_object( get_post_type() );
 			$post_type_name = ( is_object( $post_type ) ) ? $post_type->labels->name : 'undefined';
@@ -133,7 +239,6 @@ add_filter(
 			$title = get_the_title();
 		}
 
-		// Default properties.
 		$datalayer = array(
 			'event'       => 'agtm4wp_pageview',
 			'wp_title'    => $title,
@@ -141,17 +246,14 @@ add_filter(
 			'wp_loggedin' => is_user_logged_in(),
 		);
 
-		// Detect loggend in users.
 		if ( 0 !== get_current_user_id() ) {
 			$datalayer['wp_userid'] = get_current_user_id();
 		}
 
-		// Set property for archives and single post types.
 		if ( is_archive() || is_single() || is_page() ) {
 			$datalayer['wp_posttype'] = get_post_type();
 		}
 
-		// Set property for paged views.
 		if ( is_paged() ) {
 			$datalayer['wp_paged'] = get_query_var( 'paged' );
 		}
@@ -165,60 +267,52 @@ add_filter(
 /**
  * Define datalayer tracking for single post type.
  *
- * @param array $datalayer base properties.
- * @param array $post_type to detect related terms.
+ * @param array  $datalayer base properties.
+ * @param string $post_type to detect related terms.
  *
- * @return $datalayer
+ * @return array
  */
 add_filter(
 	'avidly_gtm4wp_single',
 	function ( $datalayer, $post_type = '' ) {
-		// Return if post type is not set.
-		if ( ! $post_type ) {
-			return;
+		if ( ! is_array( $datalayer ) ) {
+			$datalayer = array();
 		}
 
-		// Set global post so post meta can be retrieved outside a loop.
+		if ( ! is_string( $post_type ) || '' === $post_type ) {
+			return $datalayer;
+		}
+
 		global $post;
 
-		// Set properties for single post types and pages only.
+		if ( ! ( $post instanceof WP_Post ) ) {
+			return $datalayer;
+		}
+
 		if ( is_single() || is_page() ) {
 			$datalayer['wp_poststatus'] = get_post_status();
 			$datalayer['wp_author']     = get_the_author_meta( 'display_name', $post->post_author );
 
-			// Set properties for published content only (password, public and private).
 			if ( 'publish' === get_post_status() || 'private' === get_post_status() ) {
 				$datalayer['wp_postdate'] = get_the_date( 'd.m.Y' );
 				$datalayer['wp_moddate']  = get_the_modified_date( 'd.m.Y' );
 			}
 		}
 
-		// Get all available taxonomies for post type.
-		$taxonomies = get_object_taxonomies( $post_type );
+		$taxonomies  = get_object_taxonomies( $post_type );
+		$exclude_tax = avidly_gtm4wp_filter_array( 'avidly_gtm4wp_exclude_taxonomies', array() );
 
-		// Define taxonomies to be exclude.
-		$exclude_tax = apply_filters( 'avidly_gtm4wp_exclude_taxonomies', array() );
-
-		// Loop available taxonomies and create property if terms are found.
 		if ( $taxonomies && ! is_wp_error( $taxonomies ) ) {
 			foreach ( $taxonomies as $tax ) {
-				// Skip excluded taxonomies no need to handle those.
 				if ( in_array( $tax, $exclude_tax, true ) ) {
 					continue;
 				}
 
-				// Get terms related to post.
 				$terms_obj = get_the_terms( $post->ID, $tax );
+				$terms     = ( $terms_obj && ! is_wp_error( $terms_obj ) ) ? wp_list_pluck( $terms_obj, 'name' ) : array();
 
-				// Create comma separated list of terms.
-				$terms = ( $terms_obj && ! is_wp_error( $terms_obj ) ) ? wp_list_pluck( $terms_obj, 'name' ) : null;
-
-				// Option: convert terms to string.
-				// $terms = ( $terms_obj && ! is_wp_error( $terms_obj ) ) ? join( ', ', wp_list_pluck( $terms_obj, 'name' ) ) : null; // convert to string.
-
-				// Create property if terms are found.
 				if ( $terms ) {
-					$datalayer[ 'wp_' . $tax ] = $terms;
+					$datalayer[ 'wp_' . $tax ] = array_values( $terms );
 				}
 			}
 		}
@@ -237,24 +331,30 @@ add_filter(
 add_filter(
 	'avidly_gtm4wp_url_params',
 	function ( $datalayer ) {
-		// Get current URL parameters.
-		$params = $_GET; // phpcs:ignore
+		if ( ! is_array( $datalayer ) ) {
+			$datalayer = array();
+		}
 
-		$exclude_params = apply_filters( 'avidly_gtm4wp_exclude_params', array() );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading campaign parameters, not processing a form.
+		$params = wp_unslash( $_GET );
 
-		// Loop available params and create property if value is found.
-		if ( $params && ! is_wp_error( $params ) ) {
-			foreach ( $params as $key => $val ) {
-				// Skip excluded parameters no need to handle those.
-				if ( in_array( $key, $exclude_params, true ) ) {
-					continue;
-				}
+		if ( ! is_array( $params ) ) {
+			return $datalayer;
+		}
 
-				// Create property if value is found.
-				if ( $val ) {
-					$datalayer[ 'wp_param_' . esc_attr( $key ) ] = esc_html( $val );
-				}
+		$exclude_params = avidly_gtm4wp_filter_array( 'avidly_gtm4wp_exclude_params', array() );
+
+		foreach ( $params as $key => $val ) {
+			if ( ! is_string( $key ) || in_array( $key, $exclude_params, true ) ) {
+				continue;
 			}
+
+			// Arrays are skipped. Version 1.4.0 could not represent them and emitted a warning.
+			if ( ! is_scalar( $val ) || ! $val ) {
+				continue;
+			}
+
+			$datalayer[ 'wp_param_' . $key ] = (string) $val;
 		}
 
 		return $datalayer;
@@ -264,31 +364,6 @@ add_filter(
 );
 
 /**
- * Detect what format value should be outputed for datalayer.
- *
- * @param mixed $value to detect.
- *
- * @return $value in custom format.
- */
-function avidly_gtm4wp_esc_value( $value ) {
-	// Modify to string format.
-	if ( is_string( $value ) ) {
-		return "'" . esc_html( $value ) . "'";
-	}
-	// Modify to boolean format.
-	if ( is_bool( $value ) ) {
-		return ( $value ) ? 'true' : 'false';
-	}
-
-	// Modify to array format.
-	if ( is_array( $value ) ) {
-		return "['" . join( "', '", $value ) . "']";
-	}
-
-	return $value;
-}
-
-/**
  * Exclude post types.
  *
  * @param array $exclude the excluded post types.
@@ -296,24 +371,33 @@ function avidly_gtm4wp_esc_value( $value ) {
 add_filter(
 	'avidly_gtm4wp_exclude_post_types',
 	function ( $exclude ) {
-		$excude = array(
-			'revision',
-			'nav_menu_item',
-			'custom_css',
-			'customize_changeset',
-			'oembed_cache',
-			'user_request',
-			'wp_block',
-			'wp_template',
-			'wp_template_part',
-			'wp_global_styles',
-			'wp_navigation',
-			'polylang_mo',
-			'acf-field-group',
-			'acf-field',
-		);
+		if ( ! is_array( $exclude ) ) {
+			$exclude = array();
+		}
 
-		return $excude;
+		return array_values(
+			array_unique(
+				array_merge(
+					$exclude,
+					array(
+						'revision',
+						'nav_menu_item',
+						'custom_css',
+						'customize_changeset',
+						'oembed_cache',
+						'user_request',
+						'wp_block',
+						'wp_template',
+						'wp_template_part',
+						'wp_global_styles',
+						'wp_navigation',
+						'polylang_mo',
+						'acf-field-group',
+						'acf-field',
+					)
+				)
+			)
+		);
 	},
 	10,
 	1
@@ -327,31 +411,23 @@ add_filter(
 add_filter(
 	'avidly_gtm4wp_exclude_taxonomies',
 	function ( $exclude ) {
-		$excude = array(
-			'post_format',
-			'language',
-			'post_translations',
+		if ( ! is_array( $exclude ) ) {
+			$exclude = array();
+		}
+
+		return array_values(
+			array_unique(
+				array_merge(
+					$exclude,
+					array(
+						'post_format',
+						'language',
+						'post_translations',
+					)
+				)
+			)
 		);
-
-		return $excude;
 	},
 	10,
 	1
 );
-
-/**
- * Exclude URL parameters.
- *
- * @param array $exclude the excluded URL parameters.
- */
-add_filter(
-	'avidly_gtm4wp_exclude_params',
-	function ( $exclude ) {
-		$excude = array();
-
-		return $excude;
-	},
-	10,
-	1
-);
-
