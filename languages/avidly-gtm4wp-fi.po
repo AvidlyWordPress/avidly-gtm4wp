@@ -2,7 +2,7 @@
 # This file is distributed under the GNU General Public License v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Google Analytics 4 support 1.0\n"
+"Project-Id-Version: Avidly Google Tag Manager 1.4.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/avidly-gtm4wp\n"
 "POT-Creation-Date: 2022-05-02T13:59:49+00:00\n"
 "PO-Revision-Date: 2022-05-02 17:00+0300\n"

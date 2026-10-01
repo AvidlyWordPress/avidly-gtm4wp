@@ -10,8 +10,8 @@ function gtm4wpEventClick() {
 	let items = document.querySelectorAll('[data-click-event]');
 
 	if ( items ) {
-		for (i of items) {
-			i.addEventListener( 'click', function(e) {
+		for (const item of items) {
+			item.addEventListener( 'click', function(e) {
 
 				// Find specific DOM element from element parents.
 				const findDOM = [ 'HEADER', 'FOOTER', 'ASIDE', 'SECTION' ];
@@ -19,8 +19,8 @@ function gtm4wpEventClick() {
 				// Link element innerHTML without HTML markup.
 				const cleanInnerHTML = this.innerHTML.replace(/<[^>]*>?/gm, '');
 
-				// Add click realted stuff to dataLayer.
-				dataLayer.push({
+				window.dataLayer = window.dataLayer || [];
+				window.dataLayer.push({
 					'event': 'agtm4wp_click',
 					'wp_click_url': this.getAttribute('href'),
 					'wp_click_text': cleanInnerHTML,
@@ -58,14 +58,14 @@ const getAncestors = el => {
  *
  * @param array arr array where to find matches.
  * @param array find values to find.
- * @returns 
+ * @returns
  */
 function matchValue( arr, find ) {
 	let domElement = '';
 
 	find.forEach(value => {
 		if ( arr.includes(value) ) {
-			domElement = value	
+			domElement = value
 		}
 	});
 

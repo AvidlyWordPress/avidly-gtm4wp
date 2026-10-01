@@ -1,6 +1,6 @@
 {
   "name": "avidly-gtm4wp",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "",
   "main": "index.js",
   "directories": {},
@@ -19,7 +19,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-2.0-or-later",
   "devDependencies": {
     "laravel-mix": "^6.0.49"
   }

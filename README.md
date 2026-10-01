@@ -22,6 +22,8 @@ Detect with JavaScript if element with `[data-click-event]` has been clicked and
 ## Usage
 Download the plugin and activate it.
 
+The plugin stores nothing in the database, so an update is a file replacement. Page-view values are written as JSON. A value that version 1.4.0 stored as `Tom &amp; Jerry` is stored as `Tom & Jerry`.
+
 ## Hooks
 
 ### Manipulating base 
@@ -59,7 +61,7 @@ Array (
 Example of use:
 
 	/**
-	 * Modify single post type aataLayer properties
+	 * Modify single post type dataLayer properties
 	 *
 	 * @param array $datalayer base properties for dataLayer.
 	 * @param array $post_type where the terms will be detected.
@@ -67,7 +69,7 @@ Example of use:
 	 * @return array $datalayer.
 	 */
 	add_filter(
-		['avidly_gtm4wp_single',
+		'avidly_gtm4wp_single',
 		function( $datalayer, $post_type ) {
 			// Create new custom property.
 			$datalayer['custom_meta'] = 'New custom value';
@@ -128,7 +130,7 @@ Example of use:
 	 * @return array $exclude.
 	 */
 	add_filter(
-		['avidly_gtm4wp_exclude_post_types',
+		'avidly_gtm4wp_exclude_post_types',
 		function( $exclude ) {
 			// Add new exclusion.
 			$exclude[] = 'post';
